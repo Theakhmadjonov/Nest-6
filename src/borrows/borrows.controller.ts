@@ -1,34 +1,45 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  UseGuards,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { BorrowsService } from './borrows.service';
-import { CreateBorrowDto } from './dto/create-borrow.dto';
-import { UpdateBorrowDto } from './dto/update-borrow.dto';
+import { JwtGuard } from 'src/common/guards/jwt.guard';
+import { RolesGuard } from 'src/common/guards/roles.guard';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { CurrentUser } from 'src/common/decorators/users.decorators';
 
 @Controller('borrows')
+@UseGuards(JwtGuard)
 export class BorrowsController {
   constructor(private readonly borrowsService: BorrowsService) {}
 
-  @Post()
-  create(@Body() createBorrowDto: CreateBorrowDto) {
-    return this.borrowsService.create(createBorrowDto);
-  }
-
   @Get()
-  findAll() {
-    return this.borrowsService.findAll();
+  @UseGuards(RolesGuard)
+  @Roles('ADMIN', 'MODERATOR')
+  async findAll() {
+    return await this.borrowsService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.borrowsService.findOne(+id);
+  @Get('my')
+  async findMyBorrows(@CurrentUser() user: any) {
+    return await this.borrowsService.findUserBorrows(user.id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateBorrowDto: UpdateBorrowDto) {
-    return this.borrowsService.update(+id, updateBorrowDto);
+  @Post()
+  async borrowBook(@CurrentUser() user: any, @Body('bookId') bookId: number) {
+    return await this.borrowsService.borrowBook(user.id, bookId);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.borrowsService.remove(+id);
+  @Patch(':id/return')
+  async returnBook(@Param('id') id: string, @CurrentUser() user: any) {
+    const borrowId = parseInt(id, 10);
+    return await this.borrowsService.returnBook(borrowId, user);
   }
 }
