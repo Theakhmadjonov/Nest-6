@@ -24,22 +24,38 @@ export class BorrowsController {
   @UseGuards(RolesGuard)
   @Roles('ADMIN', 'MODERATOR')
   async findAll() {
-    return await this.borrowsService.findAll();
+    try {
+      return await this.borrowsService.findAll();
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
   @Get('my')
   async findMyBorrows(@CurrentUser() user: any) {
-    return await this.borrowsService.findUserBorrows(user.id);
+    try {
+      return await this.borrowsService.findUserBorrows(user.id);
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
   @Post()
   async borrowBook(@CurrentUser() user: any, @Body('bookId') bookId: number) {
-    return await this.borrowsService.borrowBook(user.id, bookId);
+    try {
+      return await this.borrowsService.borrowBook(user.id, bookId);
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
   @Patch(':id/return')
   async returnBook(@Param('id') id: string, @CurrentUser() user: any) {
-    const borrowId = parseInt(id, 10);
-    return await this.borrowsService.returnBook(borrowId, user);
+    try {
+      const borrowId = +id;
+      return await this.borrowsService.returnBook(borrowId, user);
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 }
