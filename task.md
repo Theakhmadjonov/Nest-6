@@ -52,32 +52,6 @@ enum Role {
 
 ## API Endpointlar
 
-### Authentication
-
-| Endpoint         | Method | Vazifa                      | Request Body              | Response                  | Access        |
-| ---------------- | ------ | --------------------------- | ------------------------- | ------------------------- | ------------- |
-| `/auth/register` | POST   | Ro'yxatdan o'tish           | `{email, password, name}` | `{id, email, name, role}` | Public        |
-| `/auth/login`    | POST   | Tizimga kirish              | `{email, password}`       | `{access_token, user}`    | Public        |
-| `/auth/profile`  | GET    | Profil ma'lumotlarini olish | -                         | `{id, email, name, role}` | Authenticated |
-
-### Users Management    
-
-| Endpoint          | Method | Vazifa                            | Request Body | Response                    | Access       |
-| ----------------- | ------ | --------------------------------- | ------------ | --------------------------- | ------------ |
-| `/users`          | GET    | Barcha foydalanuvchilarni olish   | -            | `[{id, email, name, role}]` | Admin        |
-| `/users/:id`      | GET    | Bitta foydalanuvchini olish       | -            | `{id, email, name, role}`   | Admin, Owner |
-| `/users/:id/role` | PATCH  | Foydalanuvchi rolini o'zgartirish | `{role}`     | `{id, email, name, role}`   | Admin        |
-| `/users/:id`      | DELETE | Foydalanuvchini o'chirish         | -            | `{message}`                 | Admin        |
-
-### Books Management
-
-| Endpoint     | Method | Vazifa                  | Request Body                      | Response                                           | Access           |
-| ------------ | ------ | ----------------------- | --------------------------------- | -------------------------------------------------- | ---------------- |
-| `/books`     | GET    | Barcha kitoblarni olish | -                                 | `[{id, title, author, isbn, quantity, available}]` | Public           |
-| `/books/:id` | GET    | Bitta kitobni olish     | -                                 | `{id, title, author, isbn, quantity, available}`   | Public           |
-| `/books`     | POST   | Yangi kitob qo'shish    | `{title, author, isbn, quantity}` | `{id, title, author, isbn, quantity, available}`   | Admin, Moderator |
-| `/books/:id` | PATCH  | Kitobni yangilash       | `{title?, author?, quantity?}`    | `{id, title, author, isbn, quantity, available}`   | Admin, Moderator |
-| `/books/:id` | DELETE | Kitobni o'chirish       | -                                 | `{message}`                                        | Admin            |
 
 ### Borrows Management  
 

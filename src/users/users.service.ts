@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/modules/database/prisma.service';
 
@@ -12,16 +11,42 @@ export class UsersService {
   }
 
   async findOne(id: number) {
-    return `This action returns a #${id} user`;
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+      },
+    });
+  
+    if (!user) {
+      throw new Error('User not found');
+    }
+  
+    return user;
   }
-
+  
   async update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+    const updatedUser = await this.prisma.user.update({
+      where: { id },
+      data: updateUserDto,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+      },
+    });
+    return updatedUser;
   }
-
+  
   async remove(id: number) {
-    return `This action removes a #${id} user`;
+    await this.prisma.user.delete({ where: { id } });
+    return { message: 'User deleted successfully' };
   }
+  
 
   async findUserByEmail(email: string) {
     return await this.prisma.user.findFirst({ where: { email } });
