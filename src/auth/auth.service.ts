@@ -1,26 +1,45 @@
-import { Injectable } from '@nestjs/common';
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { PrismaService } from 'src/modules/database/prisma.service';
+import { LoginDto } from './dto/login.dto';
+import { UsersService } from 'src/users/users.service';
+import { JwtService } from '@nestjs/jwt';
+import bcrypt from 'bcrypt';
+import { RegisterDto } from './dto/create-auth.dto';
 
 @Injectable()
 export class AuthService {
-  create(createAuthDto: CreateAuthDto) {
-    return 'This action adds a new auth';
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly usersService: UsersService,
+    private readonly jwtService: JwtService,
+  ) {}
+
+  async login({ email, password }: LoginDto) {
+    const user = await this.usersService.findUserByEmail(email);
+    if (user?.password === password) {
+      const { password, ...result } = user;
+      const access_token = await this.jwtService.signAsync(result);
+      return { access_token, user };
+    }
+    throw new UnauthorizedException();
   }
 
-  findAll() {
-    return `This action returns all auth`;
+  async register(body: RegisterDto) {
+    const findUser = await this.usersService.findUserByEmail(body.email);
+    if (findUser) throw new BadRequestException('User already exists');
+    const hashedPassword = await bcrypt.hash(body.password, 12);
+    const user = { ...body, password: hashedPassword };
+    const newUser = await this.prisma.user.create({ data: user });
+    const { password, ...result } = user;
+    const access_token = await this.jwtService.signAsync(result);
+    return { access_token, newUser };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} auth`;
-  }
-
-  update(id: number, updateAuthDto: UpdateAuthDto) {
-    return `This action updates a #${id} auth`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} auth`;
+  async getUserProfile(id: string) {
+    return await this.prisma.user.findFirst({ where: { id: +id } });
   }
 }

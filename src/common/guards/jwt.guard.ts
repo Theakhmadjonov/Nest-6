@@ -3,6 +3,7 @@ import {
   ExecutionContext,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/modules/database/prisma.service';
@@ -16,13 +17,27 @@ export class JwtGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const token = request.headers['authorization']?.split(' ')[1];
-    const data = await this.jwtService.verifyAsync(token);
-    const findUSer = await this.prisma.user.findFirst({
-      where: { email: data.email },
-    });
-    if (!findUSer) throw new NotFoundException('User not found');
-    request.user = data;
-    return true;
+    const authHeader = request.headers['authorization'];
+
+    if (!authHeader) throw new UnauthorizedException('No token provided');
+
+    const token = authHeader.split(' ')[1];
+    if (!token) throw new UnauthorizedException('Invalid token format');
+
+    try {
+      const payload = await this.jwtService.verifyAsync(token);
+
+      const user = await this.prisma.user.findUnique({
+        where: { email: payload.email },
+      });
+
+      if (!user) throw new NotFoundException('User not found');
+
+      request.user = user;
+
+      return true;
+    } catch (error) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
   }
 }
